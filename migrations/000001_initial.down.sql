@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS outbox;
+DROP TABLE IF EXISTS audit_entries;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS participants;

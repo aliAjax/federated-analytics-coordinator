@@ -1,0 +1,56 @@
+{
+  "sample_id": "8",
+  "session_id": "",
+  "bug_id": "fac-state-retrying-008",
+  "task_type": "bugfix",
+  "bug_category": "其他问题",
+  "repo_url": "",
+  "go_version": "1.23-alpine;1.23.0;auto",
+  "repro_determinism": "deterministic",
+  "user_query": "状态机里加了 retrying 这个中间态，但重试成功的任务还是回不到 collecting，列表里也看不到它。你帮我把这个状态流转修一下。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/statechecks -run '^TestRetryingCanTransitionToCollecting$' -count=1\ngo test ./internal/statechecks -run '^TestIsActiveIncludesRetrying$' -count=1\ngo test ./internal/statechecks -run '^TestReplayLatestActiveFindsRetrying$' -count=1",
+  "gold_root_cause": "文件: internal/protocol/domain/task.go,internal/protocol/domain/replay.go 符号: Task.Transition,ReplayLog.LatestActive 机制: 状态机漏配 retrying 返回边且活跃判定遗漏",
+  "gold_patch": "",
+  "success_criteria": "1. 基线 retrying 状态跑 20 次都无法回到 collecting；2. 修好后三条目标用例各重复 20 次全部通过；3. IsActive 和 replay 查询都把 retrying 当活跃态；4. 回退状态机或查询修复会重新红，整包回归通过。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "hutu",
+  "creator": "hutu",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "retrying_transition",
+        "description": "retrying 可回到 collecting",
+        "test": "TestRetryingCanTransitionToCollecting",
+        "command": "go test ./internal/statechecks -run '^TestRetryingCanTransitionToCollecting$' -count=1",
+        "paths": [
+          "internal/protocol/domain/task.go"
+        ]
+      },
+      {
+        "id": "retrying_active",
+        "description": "IsActive 包含 retrying",
+        "test": "TestIsActiveIncludesRetrying",
+        "command": "go test ./internal/statechecks -run '^TestIsActiveIncludesRetrying$' -count=1",
+        "paths": [
+          "internal/protocol/domain/task.go"
+        ]
+      },
+      {
+        "id": "replay_retrying_active",
+        "description": "ReplayLog.LatestActive 能返回 retrying",
+        "test": "TestReplayLatestActiveFindsRetrying",
+        "command": "go test ./internal/statechecks -run '^TestReplayLatestActiveFindsRetrying$' -count=1",
+        "paths": [
+          "internal/protocol/domain/replay.go"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+:root { color-scheme: light dark; }
+body { font-family: system-ui, sans-serif; margin: 2rem; line-height: 1.5; }
+main { max-width: 880px; margin: 0 auto; }
+section { margin-top: 2rem; }

@@ -1,0 +1,39 @@
+{
+  "sample_id": "3",
+  "session_id": "",
+  "bug_id": "fac-map-race-federation-003",
+  "task_type": "bugfix",
+  "bug_category": "concurrency并发问题",
+  "repo_url": "",
+  "go_version": "1.23-alpine;1.23.0;auto",
+  "repro_determinism": "deterministic",
+  "user_query": "我压了下参与者注册和指标查询并发跑的场景，服务直接报 data race，日志我贴几行。代码就在当前目录，能直接跑，你帮我看看怎么修。\n\nWARNING: DATA RACE\ngithub.com/example/federated-analytics-coordinator/internal/federation/manager.(*Manager).AddParticipant()\n\tinternal/federation/manager/manager.go:34\ngithub.com/example/federated-analytics-coordinator/internal/federation/manager.(*Manager).SupportedMetrics()\n\tinternal/federation/manager/manager.go:87\ngithub.com/example/federated-analytics-coordinator/internal/federation/manager.TestManagerConcurrentAccess.func2()\n\tinternal/federation/manager/manager_test.go:38",
+  "trajectory": "",
+  "verify_cmds": "go test -race ./internal/federation/manager -run '^TestManagerConcurrentAccess$' -count=1",
+  "gold_root_cause": "文件: internal/federation/manager/manager.go,internal/federation/domain/model.go 符号: Manager.AddParticipant,Manager.SupportedMetrics 机制: 无锁读写 map 且返回内部引用导致 data race",
+  "gold_patch": "",
+  "success_criteria": "1. 基线并发注册和指标查询连跑 20 次，-race 稳定报红；2. 修复后同一条带 -race 的用例连跑 20 次无任何告警；3. 注册后的参与者集合完整且指标查询正常；4. 回退锁或克隆任一处会再次红，全量回归通过。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "hutu",
+  "creator": "hutu",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "manager_concurrent_access",
+        "description": "并发 AddParticipant 与 SupportedMetrics 无 data race",
+        "test": "TestManagerConcurrentAccess",
+        "command": "go test -race ./internal/federation/manager -run '^TestManagerConcurrentAccess$' -count=1",
+        "paths": [
+          "internal/federation/manager/manager.go",
+          "internal/federation/domain/model.go"
+        ]
+      }
+    ]
+  }
+}

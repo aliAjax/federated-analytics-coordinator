@@ -1,0 +1,38 @@
+openapi: 3.1.0
+info: {title: Federated Analytics Coordinator, version: 1.0.0}
+servers: [{url: http://localhost:8081}]
+paths:
+  /api/v1/participants:
+    post:
+      summary: Register a participant public key and metric capabilities
+      parameters: [{$ref: '#/components/parameters/Tenant'}]
+      responses: {'201': {description: participant created}}
+  /api/v1/tasks:
+    post:
+      summary: Create a privacy-budgeted aggregate task
+      parameters: [{$ref: '#/components/parameters/Tenant'}]
+      responses: {'201': {description: draft task}}
+  /api/v1/tasks/{id}/start:
+    post:
+      summary: Start collecting signed shares
+      parameters: [{$ref: '#/components/parameters/Tenant'}, {$ref: '#/components/parameters/Task'}]
+      responses: {'200': {description: task collecting}}
+  /api/v1/tasks/{id}/shares:
+    post:
+      summary: Submit a signed aggregate share
+      parameters: [{$ref: '#/components/parameters/Tenant'}, {$ref: '#/components/parameters/Task'}]
+      responses: {'202': {description: accepted}, '422': {description: invalid signature or replay}}
+  /api/v1/tasks/{id}/aggregate:
+    post:
+      summary: Aggregate and release only when k threshold passes
+      parameters: [{$ref: '#/components/parameters/Tenant'}, {$ref: '#/components/parameters/Task'}]
+      responses: {'200': {description: aggregate released}}
+  /api/v1/results/{id}:
+    get:
+      summary: Read a releasable completed aggregate result
+      parameters: [{$ref: '#/components/parameters/Tenant'}, {$ref: '#/components/parameters/Task'}]
+      responses: {'200': {description: result}}
+components:
+  parameters:
+    Tenant: {name: X-Tenant-ID, in: header, required: true, schema: {type: string}}
+    Task: {name: id, in: path, required: true, schema: {type: string}}

@@ -1,0 +1,75 @@
+{
+  "sample_id": "2",
+  "session_id": "",
+  "bug_id": "fac-slice-alias-merge-002",
+  "task_type": "bugfix",
+  "bug_category": "slice相关问题",
+  "repo_url": "",
+  "go_version": "1.23-alpine;1.23.0;auto",
+  "repro_determinism": "deterministic",
+  "user_query": "我调了聚合接口之后，原来的 shares 切片被改得乱七八糟，前面几项直接没了。代码就在当前目录能跑，你帮我把这个引用问题修一下。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/aggregation/engine -run '^TestMergeSharesDoesNotMutateInput$' -count=1\ngo test ./internal/aggregation/engine -run '^TestMergeSharesRejectsEmptyTaskID$' -count=1\ngo test ./internal/aggregation/engine -run '^TestCloneSharesReturnsIndependentCopy$' -count=1\ngo test ./internal/aggregation/engine -run '^TestEngineParticipantCountIgnoresEmptyIDs$' -count=1\ngo test ./internal/aggregation/engine -run '^TestUniqueParticipantsRemovesDuplicates$' -count=1",
+  "gold_root_cause": "文件: internal/aggregation/domain/share.go,internal/aggregation/engine/engine.go 符号: CompactShares,Engine.MergeShares 机制: 原地切片压缩复用底层数组污染调用方",
+  "gold_patch": "",
+  "success_criteria": "1. 基线里连续跑 20 遍聚合用例，每次都因为输入切片被改写而红；2. 正确版本同一用例连续跑 20 次都通过；3. 聚合结果的 value、count、participants 与预期一致；4. 去掉任一处切片拷贝会重新红，go test ./... 无回归。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "hutu",
+  "creator": "hutu",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "merge_no_mutate",
+        "description": "merge_no_mutate",
+        "test": "TestMergeSharesDoesNotMutateInput",
+        "command": "go test ./internal/aggregation/engine -run '^TestMergeSharesDoesNotMutateInput$' -count=1",
+        "paths": [
+          "internal/aggregation/domain/share.go",
+          "internal/aggregation/engine/engine.go"
+        ]
+      },
+      {
+        "id": "empty_task_rejected",
+        "description": "empty_task_rejected",
+        "test": "TestMergeSharesRejectsEmptyTaskID",
+        "command": "go test ./internal/aggregation/engine -run '^TestMergeSharesRejectsEmptyTaskID$' -count=1",
+        "paths": [
+          "internal/aggregation/engine/engine.go"
+        ]
+      },
+      {
+        "id": "clone_independent",
+        "description": "clone_independent",
+        "test": "TestCloneSharesReturnsIndependentCopy",
+        "command": "go test ./internal/aggregation/engine -run '^TestCloneSharesReturnsIndependentCopy$' -count=1",
+        "paths": [
+          "internal/aggregation/domain/share.go"
+        ]
+      },
+      {
+        "id": "participant_count",
+        "description": "participant_count",
+        "test": "TestEngineParticipantCountIgnoresEmptyIDs",
+        "command": "go test ./internal/aggregation/engine -run '^TestEngineParticipantCountIgnoresEmptyIDs$' -count=1",
+        "paths": [
+          "internal/aggregation/engine/engine.go"
+        ]
+      },
+      {
+        "id": "unique_participants",
+        "description": "unique_participants",
+        "test": "TestUniqueParticipantsRemovesDuplicates",
+        "command": "go test ./internal/aggregation/engine -run '^TestUniqueParticipantsRemovesDuplicates$' -count=1",
+        "paths": [
+          "internal/aggregation/domain/share.go"
+        ]
+      }
+    ]
+  }
+}

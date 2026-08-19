@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: federated-analytics-coordinator}
+spec:
+  replicas: 2
+  selector: {matchLabels: {app: fac}}
+  template:
+    metadata: {labels: {app: fac}}
+    spec:
+      containers:
+      - name: coordinator
+        image: example/federated-analytics-coordinator:latest
+        ports: [{containerPort: 8081}]
+        resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: '1', memory: 512Mi}}
+        livenessProbe: {httpGet: {path: /healthz, port: 8081}}
+        readinessProbe: {httpGet: {path: /readyz, port: 8081}}

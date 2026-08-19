@@ -1,0 +1,66 @@
+{
+  "sample_id": "1",
+  "session_id": "",
+  "bug_id": "fac-policy-nil-map-index-001",
+  "task_type": "bugfix",
+  "bug_category": "nil相关问题",
+  "repo_url": "",
+  "go_version": "1.23-alpine;1.23.0;auto",
+  "repro_determinism": "deterministic",
+  "user_query": "我最近给策略标签索引加了个构建逻辑，现在一跑相关用例就 panic，我截几行关键栈。代码放在当前项目里，环境都现成，你帮我看看这个崩溃怎么修。\n\npanic: assignment to entry in nil map [recovered, repanicked]\ngoroutine 3 [running]:\ngithub.com/example/federated-analytics-coordinator/internal/policy/domain.(*PolicySet).IndexTags(...)\n\tinternal/policy/domain/rule.go:66\ngithub.com/example/federated-analytics-coordinator/internal/policy/evaluator.NewEvaluator(...)\n\tinternal/policy/evaluator/evaluator.go:32\ngithub.com/example/federated-analytics-coordinator/internal/policy/evaluator.TestEvaluatorIndexesRequiredTagsWithoutPanic(...)\n\tinternal/policy/evaluator/evaluator_test.go:17",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/policy/evaluator -run '^TestEvaluatorIndexesRequiredTagsWithoutPanic$' -count=1\ngo test ./internal/policy/evaluator -run '^TestPolicySetTagCount$' -count=1\ngo test ./internal/policy/evaluator -run '^TestEvaluatorRejectsMissingRequiredTag$' -count=1\ngo test ./internal/policy/evaluator -run '^TestEvaluatorTrimsMetricWhitespace$' -count=1",
+  "gold_root_cause": "文件: internal/policy/domain/rule.go,internal/policy/evaluator/evaluator.go 符号: PolicySet.IndexTags,NewEvaluator 机制: nil map 索引未初始化导致写入 panic",
+  "gold_patch": "",
+  "success_criteria": "1. 当前策略标签用例每次都会 panic，基线连续 20 遍全红；2. 修完之后这个用例跑 20 次都是绿的，nil map 写入不再出现；3. 带 required_tags 的策略请求能命中 allow 规则并返回正确 rule id；4. 回退索引初始化后再次变红，全量测试无回归。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "hutu",
+  "creator": "hutu",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "tag_index_init",
+        "description": "策略索引构建不 panic 且匹配成功",
+        "test": "TestEvaluatorIndexesRequiredTagsWithoutPanic",
+        "command": "go test ./internal/policy/evaluator -run '^TestEvaluatorIndexesRequiredTagsWithoutPanic$' -count=1",
+        "paths": [
+          "internal/policy/domain/rule.go",
+          "internal/policy/evaluator/evaluator.go"
+        ]
+      },
+      {
+        "id": "tag_count",
+        "description": "策略集统计唯一 required_tags 数量",
+        "test": "TestPolicySetTagCount",
+        "command": "go test ./internal/policy/evaluator -run '^TestPolicySetTagCount$' -count=1",
+        "paths": [
+          "internal/policy/domain/rule.go"
+        ]
+      },
+      {
+        "id": "missing_tag_denied",
+        "description": "缺失 required_tag 时拒绝匹配",
+        "test": "TestEvaluatorRejectsMissingRequiredTag",
+        "command": "go test ./internal/policy/evaluator -run '^TestEvaluatorRejectsMissingRequiredTag$' -count=1",
+        "paths": [
+          "internal/policy/evaluator/evaluator.go"
+        ]
+      },
+      {
+        "id": "metric_trim",
+        "description": "metric 前后空白可被归一化",
+        "test": "TestEvaluatorTrimsMetricWhitespace",
+        "command": "go test ./internal/policy/evaluator -run '^TestEvaluatorTrimsMetricWhitespace$' -count=1",
+        "paths": [
+          "internal/policy/evaluator/evaluator.go"
+        ]
+      }
+    ]
+  }
+}

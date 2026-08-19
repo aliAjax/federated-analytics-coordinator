@@ -1,0 +1,65 @@
+{
+  "sample_id": "9",
+  "session_id": "",
+  "bug_id": "fac-slice-bootstrap-009",
+  "task_type": "bugfix",
+  "bug_category": "slice相关问题",
+  "repo_url": "",
+  "go_version": "1.23-alpine;1.23.0;auto",
+  "repro_determinism": "deterministic",
+  "user_query": "BootstrapSample 采样完以后，原来的数组被改成了别的值，我后面再读就不对了。你帮我把这个切片复用的问题修掉。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/checks/samplingtest -run '^TestSamplingLeavesInputIntact$' -count=1\ngo test ./internal/checks/samplingtest -run '^TestSliceSamplesDoesNotAlias$' -count=1\ngo test ./internal/checks/samplingtest -run '^TestReverseSamplesDoesNotAlias$' -count=1\ngo test ./internal/checks/samplingtest -run '^TestSampleWindowDoesNotAlias$' -count=1",
+  "gold_root_cause": "文件: internal/privacy/sampling.go,internal/privacy/sampling_policy.go 符号: BootstrapSample,SliceSamples 机制: 采样函数原地复用底层数组污染输入切片",
+  "gold_patch": "",
+  "success_criteria": "1. 基线采样跑 20 次，每次都会把原数组改坏；2. 修复后同一用例连续跑 20 遍都通过；3. 采样结果正确且原切片元素和长度不变；4. 去掉拷贝逻辑会重新红，全量用例通过。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "hutu",
+  "creator": "hutu",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "bootstrap_no_mutate",
+        "description": "BootstrapSample 不改变输入切片",
+        "test": "TestSamplingLeavesInputIntact",
+        "command": "go test ./internal/checks/samplingtest -run '^TestSamplingLeavesInputIntact$' -count=1",
+        "paths": [
+          "internal/privacy/sampling.go"
+        ]
+      },
+      {
+        "id": "slice_samples_no_alias",
+        "description": "SliceSamples 不改变输入切片",
+        "test": "TestSliceSamplesDoesNotAlias",
+        "command": "go test ./internal/checks/samplingtest -run '^TestSliceSamplesDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/privacy/sampling_policy.go"
+        ]
+      },
+      {
+        "id": "reverse_samples_no_alias",
+        "description": "ReverseSamples 不改变输入切片",
+        "test": "TestReverseSamplesDoesNotAlias",
+        "command": "go test ./internal/checks/samplingtest -run '^TestReverseSamplesDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/privacy/sampling_policy.go"
+        ]
+      },
+      {
+        "id": "sample_window_no_alias",
+        "description": "SampleWindow 不改变输入切片",
+        "test": "TestSampleWindowDoesNotAlias",
+        "command": "go test ./internal/checks/samplingtest -run '^TestSampleWindowDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/privacy/sampling_policy.go"
+        ]
+      }
+    ]
+  }
+}

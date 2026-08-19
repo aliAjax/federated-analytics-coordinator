@@ -1,0 +1,8 @@
+services:
+  coordinator:
+    build: .
+    ports: ["8081:8081"]
+    environment: {FAC_ADDRESS: ":8081", FAC_ENV: compose}
+  postgres:
+    image: postgres:16-alpine
+    environment: {POSTGRES_USER: fac, POSTGRES_PASSWORD: fac-dev-only, POSTGRES_DB: fac}

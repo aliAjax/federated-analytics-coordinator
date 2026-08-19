@@ -1,0 +1,6 @@
+{
+  "name": "federated-analytics-coordinator-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static dashboard for federated analytics coordinator tasks and results"
+}

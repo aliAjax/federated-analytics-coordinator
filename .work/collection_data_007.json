@@ -1,0 +1,48 @@
+{
+  "sample_id": "7",
+  "session_id": "",
+  "bug_id": "fac-error-commit-settle-007",
+  "task_type": "bugfix",
+  "bug_category": "defer相关问题",
+  "repo_url": "",
+  "go_version": "1.23-alpine;1.23.0;auto",
+  "repro_determinism": "deterministic",
+  "user_query": "隐私台账结算的时候，delta 非法的单子也被提交了，而且错误判断不出来。你帮我修一下，别让非法单子进已提交状态。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/privacy -run '^TestLedgerNotFoundWrapsSentinel$' -count=1\ngo test ./internal/privacy -run '^TestSettleDoesNotCommitInvalidEntry$' -count=1",
+  "gold_root_cause": "文件: internal/privacy/accountant.go,internal/privacy/ledger.go 符号: Accountant.Settle,Ledger.Commit 机制: defer 无条件提交且 not found 错误链断裂",
+  "gold_patch": "",
+  "success_criteria": "1. 基线非法 delta 结算跑 20 次，台账都错误标成 committed；2. 修复版重复 20 次都保持非法项未提交；3. not found 错误链能被 errors.Is 识别；4. 撤掉无条件提交或错误包装会重新红，完整测试全绿。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "hutu",
+  "creator": "hutu",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "ledger_not_found_sentinel",
+        "description": "台账 not found 错误链可被 errors.Is 识别",
+        "test": "TestLedgerNotFoundWrapsSentinel",
+        "command": "go test ./internal/privacy -run '^TestLedgerNotFoundWrapsSentinel$' -count=1",
+        "paths": [
+          "internal/privacy/ledger.go"
+        ]
+      },
+      {
+        "id": "settle_no_invalid_commit",
+        "description": "非法 delta 的 Settle 不提交台账",
+        "test": "TestSettleDoesNotCommitInvalidEntry",
+        "command": "go test ./internal/privacy -run '^TestSettleDoesNotCommitInvalidEntry$' -count=1",
+        "paths": [
+          "internal/privacy/accountant.go",
+          "internal/privacy/ledger.go"
+        ]
+      }
+    ]
+  }
+}

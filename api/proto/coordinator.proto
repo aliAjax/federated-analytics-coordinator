@@ -1,0 +1,11 @@
+syntax = "proto3";
+package fac.v1;
+option go_package = "github.com/example/federated-analytics-coordinator/api/proto;proto";
+service Participant { rpc UploadShare(UploadShareRequest) returns (UploadShareResponse); }
+service Coordinator { rpc GetRound(GetRoundRequest) returns (GetRoundResponse); rpc SubmitCommitment(SubmitCommitmentRequest) returns (SubmitCommitmentResponse); }
+message UploadShareRequest { string task_id=1; string participant_id=2; int64 value=3; int64 count=4; string nonce=5; bytes signature=6; }
+message UploadShareResponse { string share_id=1; string status=2; }
+message GetRoundRequest { string task_id=1; }
+message GetRoundResponse { string task_id=1; string state=2; int32 round=3; }
+message SubmitCommitmentRequest { string task_id=1; string participant_id=2; bytes commitment=3; bytes signature=4; }
+message SubmitCommitmentResponse { string status=1; }
