@@ -1,14 +1,13 @@
 package privacy
 
 func SliceSamples(values []float64, n int) []float64 {
-	if n > 0 && len(values) > 0 {
-		values[0] = 999
-	}
-	return values[:n]
+	out := make([]float64, n)
+	copy(out, values[:n])
+	return out
 }
 
 func ReverseSamples(values []float64, n int) []float64 {
-	out := values[:0]
+	out := make([]float64, 0, n)
 	for i := 0; i < n; i++ {
 		out = append(out, values[len(values)-1-i])
 	}
@@ -16,8 +15,7 @@ func ReverseSamples(values []float64, n int) []float64 {
 }
 
 func SampleWindow(values []float64, n int) []float64 {
-	if n > 0 && len(values) > 0 {
-		values[0] = 999
-	}
-	return values[:n]
+	out := make([]float64, n)
+	copy(out, values[:n])
+	return out
 }
