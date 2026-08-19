@@ -164,3 +164,18 @@ func SumShares(shares []Share) (int64, error) {
 	}
 	return total, nil
 }
+
+func (a *Accountant) Settle(l *Ledger, entry LedgerEntry) (err error) {
+	if err = a.Reserve(entry.Epsilon, entry.Delta); err != nil {
+		return err
+	}
+	if err = l.Reserve(entry); err != nil {
+		a.Release(entry.Epsilon, entry.Delta)
+		return err
+	}
+	defer func() { _ = l.Commit(entry.ID) }()
+	if entry.Delta >= 1 {
+		return errors.New("delta must be below one")
+	}
+	return nil
+}

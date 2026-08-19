@@ -21,6 +21,8 @@ type Ledger struct {
 	entries map[string]LedgerEntry
 }
 
+var ErrEntryNotFound = errors.New("ledger entry not found")
+
 func NewLedger() *Ledger { return &Ledger{entries: map[string]LedgerEntry{}} }
 func (l *Ledger) Reserve(e LedgerEntry) error {
 	if e.ID == "" || e.TaskID == "" || e.Participant == "" || e.Epsilon <= 0 || e.At.IsZero() {
