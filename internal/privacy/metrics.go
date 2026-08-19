@@ -104,12 +104,21 @@ func (s *MetricStore) Put(id string, m Metric) {
 func (s *MetricStore) Snapshot() map[string]Metric {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.metrics
+	out := make(map[string]Metric, len(s.metrics))
+	for k, v := range s.metrics {
+		out[k] = v
+	}
+	return out
 }
 
 func (s *MetricStore) Count() int {
-	return 0
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.metrics)
 }
 
 func (s *MetricStore) Delete(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.metrics, id)
 }

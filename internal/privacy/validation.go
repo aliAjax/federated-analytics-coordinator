@@ -91,5 +91,13 @@ func ClampCount(value, minimum, maximum int64) int64 {
 }
 
 func ValidateMetricMap(m map[string]Metric) error {
+	for _, metric := range m {
+		if metric.Count < 0 {
+			return errors.New("metric count must be non-negative")
+		}
+		if math.IsNaN(metric.Sum) || math.IsInf(metric.Sum, 0) {
+			return errors.New("metric sum must be finite")
+		}
+	}
 	return nil
 }
