@@ -284,12 +284,30 @@ func (s *Service) CompleteTask(tenant, taskID string) (err error) {
 	if err != nil {
 		return err
 	}
+	if err = s.validateCompletionBudget(t.Budget); err != nil {
+		return err
+	}
 	if err = t.Transition(protocol.Completed, s.now()); err != nil {
 		return err
 	}
-	defer func() { err = s.repo.SaveTask(t) }()
-	if t.Budget.Spent > t.Budget.Epsilon {
+	if err = s.repo.SaveTask(t); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Service) validateCompletionBudget(b protocol.Budget) error {
+	if b.Spent > b.Epsilon {
 		return fmt.Errorf("budget overspent")
+	}
+	if b.Epsilon <= 0 {
+		return fmt.Errorf("task budget must be positive")
+	}
+	if b.Spent < 0 {
+		return fmt.Errorf("spent budget cannot be negative")
+	}
+	if b.Delta < 0 {
+		return fmt.Errorf("delta cannot be negative")
 	}
 	return nil
 }
