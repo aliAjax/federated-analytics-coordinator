@@ -68,3 +68,8 @@ func NormalizeCapabilities(v []Capability) []Capability {
 	sort.Slice(out, func(i, j int) bool { return out[i].Metric < out[j].Metric })
 	return out
 }
+
+func (p Participant) Clone() Participant {
+	p.Capabilities = append([]Capability(nil), p.Capabilities...)
+	return p
+}

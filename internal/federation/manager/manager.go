@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 
 	federation "github.com/example/federated-analytics-coordinator/internal/federation/domain"
 )
 
 // Manager negotiates participant capabilities and quorum plans.
 type Manager struct {
+	mu           sync.RWMutex
 	participants map[string]federation.Participant
 }
 
@@ -26,10 +28,12 @@ func (m *Manager) AddParticipant(p federation.Participant) error {
 	if key == "" {
 		return errors.New("participant id is required")
 	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, ok := m.participants[key]; ok {
 		return fmt.Errorf("participant already exists: %s", key)
 	}
-	clone := p
+	clone := p.Clone()
 	clone.Capabilities = federation.NormalizeCapabilities(clone.Capabilities)
 	m.participants[key] = clone
 	return nil
@@ -50,6 +54,8 @@ func (m *Manager) PlanQuorum(metric string, required int) (QuorumPlan, error) {
 	if required < 2 {
 		return QuorumPlan{}, errors.New("quorum must be at least two")
 	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	plan := QuorumPlan{Metric: metric, Required: required, SupportsDropout: true}
 	for _, p := range m.participants {
 		if p.Status != federation.ParticipantActive {
@@ -83,6 +89,8 @@ func capabilityForMetric(caps []federation.Capability, metric string) federation
 }
 
 func (m *Manager) SupportedMetrics() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	seen := map[string]bool{}
 	for _, p := range m.participants {
 		if p.Status != federation.ParticipantActive {
@@ -97,5 +105,15 @@ func (m *Manager) SupportedMetrics() []string {
 		out = append(out, metric)
 	}
 	sort.Strings(out)
+	return out
+}
+
+func (m *Manager) Snapshot() []federation.Participant {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]federation.Participant, 0, len(m.participants))
+	for _, p := range m.participants {
+		out = append(out, p.Clone())
+	}
 	return out
 }
