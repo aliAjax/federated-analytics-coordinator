@@ -4,10 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	aggregate "github.com/example/federated-analytics-coordinator/internal/aggregation/domain"
 	federation "github.com/example/federated-analytics-coordinator/internal/federation/domain"
 	"github.com/example/federated-analytics-coordinator/internal/platform/config"
+	protocol "github.com/example/federated-analytics-coordinator/internal/protocol/domain"
 	service "github.com/example/federated-analytics-coordinator/internal/protocol/application"
 	"io"
 	"net/http"
@@ -156,6 +158,10 @@ func (s *Server) start(w http.ResponseWriter, r *http.Request) {
 	}
 	v, e := s.service.Start(t, r.PathValue("id"))
 	if e != nil {
+		if errors.Is(e, protocol.ErrNotFound) {
+			s.fail(w, 404, id, "not_found", e.Error())
+			return
+		}
 		s.fail(w, 422, id, "start_rejected", e.Error())
 		return
 	}

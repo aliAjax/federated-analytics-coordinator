@@ -1,9 +1,15 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
+
+// ErrNotFound is returned by the task repository when no task matches the
+// tenant and id pair. Callers use errors.Is to distinguish a missing task
+// from other failures (invalid state, budget, etc.).
+var ErrNotFound = errors.New("not found")
 
 type State string
 

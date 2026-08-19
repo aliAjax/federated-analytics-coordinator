@@ -51,7 +51,7 @@ func (m *Memory) FindTask(tenant, id string) (protocol.Task, error) {
 	defer m.mu.RUnlock()
 	v, ok := m.tasks[k(tenant, id)]
 	if !ok {
-		return protocol.Task{}, fmt.Errorf("task not found")
+		return protocol.Task{}, protocol.ErrNotFound
 	}
 	return cloneTask(v), nil
 }
