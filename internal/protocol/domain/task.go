@@ -77,7 +77,7 @@ type Task struct {
 }
 
 func (t *Task) Transition(next State, now time.Time) error {
-	allowed := map[State][]State{Draft: {Collecting, Aborted}, Collecting: {Masked, Aborted}, Masked: {Aggregating, Aborted}, Aggregating: {Revealing, Aborted}, Revealing: {Completed, Aborted}}
+	allowed := map[State][]State{Draft: {Collecting, Aborted}, Collecting: {Masked, Aborted}, Masked: {Aggregating, Aborted}, Aggregating: {Revealing, Aborted}, Revealing: {Completed, Aborted}, Retrying: {Collecting, Aborted}}
 	for _, v := range allowed[t.State] {
 		if v == next {
 			t.State = next
@@ -106,7 +106,7 @@ func (t Task) Validate() error {
 
 func IsActive(s State) bool {
 	switch s {
-	case Collecting, Masked, Aggregating, Revealing:
+	case Collecting, Masked, Aggregating, Revealing, Retrying:
 		return true
 	default:
 		return false

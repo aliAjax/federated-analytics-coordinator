@@ -94,7 +94,7 @@ func (l *ReplayLog) LatestActive(taskID string) (string, bool) {
 	items := l.ForTask(taskID)
 	for i := len(items) - 1; i >= 0; i-- {
 		switch items[i].Phase {
-		case "collecting", "masked", "aggregating", "revealing":
+		case "collecting", "masked", "aggregating", "revealing", "retrying":
 			return items[i].Phase, true
 		}
 	}
