@@ -93,10 +93,20 @@ func (l *ReplayLog) ClearBefore(at time.Time) int {
 func (l *ReplayLog) LatestActive(taskID string) (string, bool) {
 	items := l.ForTask(taskID)
 	for i := len(items) - 1; i >= 0; i-- {
-		switch items[i].Phase {
-		case "collecting", "masked", "aggregating", "revealing":
+		if IsActive(State(items[i].Phase)) {
 			return items[i].Phase, true
 		}
 	}
 	return "", false
+}
+
+func (l *ReplayLog) ActivePhases(taskID string) []string {
+	items := l.ForTask(taskID)
+	out := make([]string, 0, len(items))
+	for _, item := range items {
+		if IsActive(State(item.Phase)) {
+			out = append(out, item.Phase)
+		}
+	}
+	return out
 }

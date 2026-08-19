@@ -77,16 +77,30 @@ type Task struct {
 }
 
 func (t *Task) Transition(next State, now time.Time) error {
-	allowed := map[State][]State{Draft: {Collecting, Aborted}, Collecting: {Masked, Aborted}, Masked: {Aggregating, Aborted}, Aggregating: {Revealing, Aborted}, Revealing: {Completed, Aborted}}
-	for _, v := range allowed[t.State] {
-		if v == next {
-			t.State = next
-			t.UpdatedAt = now
-			t.Revision++
-			return nil
+	if !CanTransition(t.State, next) {
+		return fmt.Errorf("invalid state transition from %s to %s", t.State, next)
+	}
+	t.State = next
+	t.UpdatedAt = now
+	t.Revision++
+	return nil
+}
+
+func CanTransition(from, to State) bool {
+	allowed := map[State][]State{
+		Draft:       {Collecting, Aborted},
+		Collecting:  {Masked, Retrying, Aborted},
+		Retrying:    {Collecting, Aborted},
+		Masked:      {Aggregating, Aborted},
+		Aggregating: {Revealing, Aborted},
+		Revealing:   {Completed, Aborted},
+	}
+	for _, v := range allowed[from] {
+		if v == to {
+			return true
 		}
 	}
-	return fmt.Errorf("invalid state transition from %s to %s", t.State, next)
+	return false
 }
 func (t Task) Validate() error {
 	if t.ID == "" || t.TenantID == "" || t.TemplateID == "" {
@@ -106,7 +120,7 @@ func (t Task) Validate() error {
 
 func IsActive(s State) bool {
 	switch s {
-	case Collecting, Masked, Aggregating, Revealing:
+	case Collecting, Masked, Aggregating, Revealing, Retrying:
 		return true
 	default:
 		return false
