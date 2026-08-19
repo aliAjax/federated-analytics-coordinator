@@ -89,3 +89,7 @@ func ClampCount(value, minimum, maximum int64) int64 {
 	}
 	return value
 }
+
+func ValidateMetricMap(m map[string]Metric) error {
+	return nil
+}

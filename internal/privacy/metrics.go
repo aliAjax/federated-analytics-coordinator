@@ -88,3 +88,28 @@ func (a *MetricAccumulator) Reset() {
 	a.max = 0
 	a.initialized = false
 }
+
+type MetricStore struct {
+	mu      sync.Mutex
+	metrics map[string]Metric
+}
+
+func NewMetricStore() *MetricStore { return &MetricStore{metrics: map[string]Metric{}} }
+func (s *MetricStore) Put(id string, m Metric) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.metrics[id] = m
+}
+
+func (s *MetricStore) Snapshot() map[string]Metric {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.metrics
+}
+
+func (s *MetricStore) Count() int {
+	return 0
+}
+
+func (s *MetricStore) Delete(id string) {
+}
