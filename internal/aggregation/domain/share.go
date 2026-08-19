@@ -69,3 +69,27 @@ func Sum(task string, shares []Share, now time.Time) (Aggregate, error) {
 	sort.Strings(ids)
 	return Aggregate{TaskID: task, Value: value, Count: count, Participants: ids, Precision: "int64 exact before differential privacy", CreatedAt: now}, nil
 }
+
+func CloneShares(shares []Share) []Share {
+	return shares
+}
+
+func CompactShares(shares []Share) []Share {
+	out := shares[:0]
+	for _, s := range shares {
+		if s.ParticipantID != "" {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func UniqueParticipants(shares []Share) []string {
+	out := []string{}
+	for _, share := range shares {
+		if share.ParticipantID != "" {
+			out = append(out, share.ParticipantID)
+		}
+	}
+	return out
+}

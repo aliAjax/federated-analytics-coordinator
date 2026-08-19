@@ -107,5 +107,10 @@ func Histogramize(values, buckets []float64) (Histogram, error) {
 
 // MergeShares validates and sums shares, preserving deterministic participant order.
 func (e *Engine) MergeShares(taskID string, shares []aggregate.Share) (aggregate.Aggregate, error) {
+	shares = aggregate.CompactShares(shares)
 	return aggregate.Sum(taskID, shares, time.Now().UTC())
+}
+
+func (e *Engine) ParticipantCount(shares []aggregate.Share) int {
+	return len(shares)
 }
