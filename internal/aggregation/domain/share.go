@@ -71,11 +71,13 @@ func Sum(task string, shares []Share, now time.Time) (Aggregate, error) {
 }
 
 func CloneShares(shares []Share) []Share {
-	return shares
+	out := make([]Share, len(shares))
+	copy(out, shares)
+	return out
 }
 
 func CompactShares(shares []Share) []Share {
-	out := shares[:0]
+	out := make([]Share, 0, len(shares))
 	for _, s := range shares {
 		if s.ParticipantID != "" {
 			out = append(out, s)
@@ -85,9 +87,11 @@ func CompactShares(shares []Share) []Share {
 }
 
 func UniqueParticipants(shares []Share) []string {
-	out := []string{}
+	seen := map[string]bool{}
+	out := make([]string, 0, len(shares))
 	for _, share := range shares {
-		if share.ParticipantID != "" {
+		if share.ParticipantID != "" && !seen[share.ParticipantID] {
+			seen[share.ParticipantID] = true
 			out = append(out, share.ParticipantID)
 		}
 	}
