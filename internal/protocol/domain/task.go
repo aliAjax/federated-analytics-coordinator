@@ -13,6 +13,7 @@ const (
 	Masked      State = "masked"
 	Aggregating State = "aggregating"
 	Revealing   State = "revealing"
+	Retrying    State = "retrying"
 	Completed   State = "completed"
 	Aborted     State = "aborted"
 )
@@ -101,4 +102,13 @@ func (t Task) Validate() error {
 		return fmt.Errorf("deadline required")
 	}
 	return nil
+}
+
+func IsActive(s State) bool {
+	switch s {
+	case Collecting, Masked, Aggregating, Revealing:
+		return true
+	default:
+		return false
+	}
 }

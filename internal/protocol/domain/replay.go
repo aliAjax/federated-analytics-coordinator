@@ -89,3 +89,14 @@ func (l *ReplayLog) ClearBefore(at time.Time) int {
 	l.entries = kept
 	return removed
 }
+
+func (l *ReplayLog) LatestActive(taskID string) (string, bool) {
+	items := l.ForTask(taskID)
+	for i := len(items) - 1; i >= 0; i-- {
+		switch items[i].Phase {
+		case "collecting", "masked", "aggregating", "revealing":
+			return items[i].Phase, true
+		}
+	}
+	return "", false
+}
