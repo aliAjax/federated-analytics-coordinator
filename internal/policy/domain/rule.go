@@ -48,14 +48,30 @@ func (r Rule) Validate() error {
 }
 
 type PolicySet struct {
-	ID        string    `json:"id"`
-	Version   int       `json:"version"`
-	Rules     []Rule    `json:"rules"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string                     `json:"id"`
+	Version   int                        `json:"version"`
+	Rules     []Rule                     `json:"rules"`
+	UpdatedAt time.Time                  `json:"updated_at"`
+	TagIndex  map[string]map[string]bool `json:"-"`
 }
 
 func NewPolicySet(id string, version int) PolicySet {
 	return PolicySet{ID: id, Version: version, UpdatedAt: time.Now().UTC()}
+}
+
+func (p PolicySet) TagCount() int {
+	return len(p.Rules)
+}
+
+func (p *PolicySet) IndexTags() {
+	for _, r := range p.Rules {
+		for _, tag := range r.RequiredTags {
+			if p.TagIndex[tag] == nil {
+				p.TagIndex[tag] = map[string]bool{}
+			}
+			p.TagIndex[tag][r.ID] = true
+		}
+	}
 }
 
 func (p PolicySet) FindRule(ruleID string) (Rule, bool) {
