@@ -4,10 +4,12 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	aggregate "github.com/example/federated-analytics-coordinator/internal/aggregation/domain"
 	federation "github.com/example/federated-analytics-coordinator/internal/federation/domain"
 	"github.com/example/federated-analytics-coordinator/internal/platform/config"
+	"github.com/example/federated-analytics-coordinator/internal/platform/store"
 	service "github.com/example/federated-analytics-coordinator/internal/protocol/application"
 	"io"
 	"net/http"
@@ -156,11 +158,20 @@ func (s *Server) start(w http.ResponseWriter, r *http.Request) {
 	}
 	v, e := s.service.Start(t, r.PathValue("id"))
 	if e != nil {
-		s.fail(w, 422, id, "start_rejected", e.Error())
+		s.writeStartError(w, id, e)
 		return
 	}
 	s.json(w, 200, id, v)
 }
+
+func (s *Server) writeStartError(w http.ResponseWriter, id string, e error) {
+	if errors.Is(e, store.ErrNotFound) {
+		s.fail(w, 404, id, "not_found", e.Error())
+		return
+	}
+	s.fail(w, 422, id, "start_rejected", e.Error())
+}
+
 func (s *Server) share(w http.ResponseWriter, r *http.Request) {
 	id := rid(r)
 	t, e := tenant(r)

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	federation "github.com/example/federated-analytics-coordinator/internal/federation/domain"
 	protocol "github.com/example/federated-analytics-coordinator/internal/protocol/domain"
@@ -11,6 +12,12 @@ type Memory struct {
 	mu           sync.RWMutex
 	participants map[string]federation.Participant
 	tasks        map[string]protocol.Task
+}
+
+var ErrNotFound = errors.New("not found")
+
+func notFound(kind, id string) error {
+	return fmt.Errorf("%w: %s %s", ErrNotFound, kind, id)
 }
 
 func New() *Memory {
@@ -32,7 +39,7 @@ func (m *Memory) FindParticipant(tenant, id string) (federation.Participant, err
 	defer m.mu.RUnlock()
 	p, ok := m.participants[k(tenant, id)]
 	if !ok {
-		return federation.Participant{}, fmt.Errorf("participant not found")
+		return federation.Participant{}, notFound("participant", id)
 	}
 	return p, nil
 }
@@ -51,7 +58,7 @@ func (m *Memory) FindTask(tenant, id string) (protocol.Task, error) {
 	defer m.mu.RUnlock()
 	v, ok := m.tasks[k(tenant, id)]
 	if !ok {
-		return protocol.Task{}, fmt.Errorf("task not found")
+		return protocol.Task{}, notFound("task", id)
 	}
 	return cloneTask(v), nil
 }
