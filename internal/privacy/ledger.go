@@ -2,6 +2,7 @@ package privacy
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -41,7 +42,7 @@ func (l *Ledger) Commit(id string) error {
 	defer l.mu.Unlock()
 	e, ok := l.entries[id]
 	if !ok {
-		return errors.New("ledger entry not found")
+		return fmt.Errorf("ledger entry not found: %w", ErrEntryNotFound)
 	}
 	e.Committed = true
 	l.entries[id] = e
@@ -51,7 +52,7 @@ func (l *Ledger) Release(id string) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if _, ok := l.entries[id]; !ok {
-		return errors.New("ledger entry not found")
+		return fmt.Errorf("ledger entry not found: %w", ErrEntryNotFound)
 	}
 	delete(l.entries, id)
 	return nil

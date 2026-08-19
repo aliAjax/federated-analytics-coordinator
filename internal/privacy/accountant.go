@@ -173,7 +173,14 @@ func (a *Accountant) Settle(l *Ledger, entry LedgerEntry) (err error) {
 		a.Release(entry.Epsilon, entry.Delta)
 		return err
 	}
-	defer func() { _ = l.Commit(entry.ID) }()
+	defer func() {
+		if err != nil {
+			return
+		}
+		if cerr := l.Commit(entry.ID); cerr != nil {
+			err = fmt.Errorf("commit ledger: %w", cerr)
+		}
+	}()
 	if entry.Delta >= 1 {
 		return errors.New("delta must be below one")
 	}
