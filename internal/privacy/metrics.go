@@ -104,12 +104,25 @@ func (s *MetricStore) Put(id string, m Metric) {
 func (s *MetricStore) Snapshot() map[string]Metric {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return s.metrics
+	return CloneMetricMap(s.metrics)
 }
 
 func (s *MetricStore) Count() int {
-	return 0
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.metrics)
 }
 
 func (s *MetricStore) Delete(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.metrics, id)
+}
+
+func (s *MetricStore) PutAll(items map[string]Metric) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for id, m := range items {
+		s.metrics[id] = m
+	}
 }

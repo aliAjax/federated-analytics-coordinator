@@ -2,6 +2,7 @@ package privacy
 
 import (
 	"errors"
+	"fmt"
 	"math"
 )
 
@@ -90,6 +91,22 @@ func ClampCount(value, minimum, maximum int64) int64 {
 	return value
 }
 
+func CloneMetricMap(src map[string]Metric) map[string]Metric {
+	dst := make(map[string]Metric, len(src))
+	for k, v := range src {
+		dst[k] = v
+	}
+	return dst
+}
+
 func ValidateMetricMap(m map[string]Metric) error {
+	for id, metric := range m {
+		if metric.Count < 0 {
+			return fmt.Errorf("metric %s count cannot be negative", id)
+		}
+		if math.IsNaN(metric.Sum) || math.IsInf(metric.Sum, 0) {
+			return fmt.Errorf("metric %s sum must be finite", id)
+		}
+	}
 	return nil
 }
