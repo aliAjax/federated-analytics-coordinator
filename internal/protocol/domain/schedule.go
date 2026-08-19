@@ -159,9 +159,40 @@ func (s *Scheduler) Snapshot() []ScheduleItem {
 }
 
 func (s *Scheduler) LeaseContext(ctx context.Context, owner string, now time.Time, limit int) []ScheduleItem {
-	return s.Lease(owner, now, limit)
+	if owner == "" || limit < 1 {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	available := make([]ScheduleItem, 0)
+	for _, item := range s.items {
+		if len(available) >= limit {
+			break
+		}
+		if item.LeaseUntil.After(now) || item.AvailableAt.After(now) || item.Deadline.Before(now) || item.Attempts >= s.maxAttempts {
+			continue
+		}
+		if err := ctx.Err(); err != nil {
+			break
+		}
+		item.LeaseOwner = owner
+		item.LeaseUntil = now.Add(30 * time.Second)
+		item.Attempts++
+		s.items[item.TaskID] = item
+		available = append(available, item)
+	}
+	sort.SliceStable(available, func(i, j int) bool {
+		if available[i].Priority.Weight() == available[j].Priority.Weight() {
+			return available[i].Deadline.Before(available[j].Deadline)
+		}
+		return available[i].Priority.Weight() > available[j].Priority.Weight()
+	})
+	return available
 }
 
 func (s *Scheduler) Has(taskID string) bool {
-	return false
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.items[taskID]
+	return ok
 }

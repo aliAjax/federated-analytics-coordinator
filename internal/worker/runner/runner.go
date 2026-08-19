@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,7 +26,10 @@ func NewRunner(scheduler TaskProvider, owner string) *Runner {
 }
 
 func (r *Runner) Run(ctx context.Context, limit int) (int, error) {
-	items := r.Scheduler.LeaseContext(context.Background(), r.Owner, r.Now(), limit)
+	if err := r.validate(limit); err != nil {
+		return 0, err
+	}
+	items := r.Scheduler.LeaseContext(ctx, r.Owner, r.Now(), limit)
 	for _, item := range items {
 		if err := r.Scheduler.Complete(item.TaskID, r.Owner); err != nil {
 			_ = r.Scheduler.Fail(item.TaskID, r.Owner, r.Now())
@@ -35,10 +39,20 @@ func (r *Runner) Run(ctx context.Context, limit int) (int, error) {
 	return len(items), nil
 }
 
-func (r *Runner) MaxConcurrency() int {
-	return 0
+func (r *Runner) validate(limit int) error {
+	if limit < 1 {
+		return errors.New("limit must be positive")
+	}
+	if r.Owner == "" {
+		return errors.New("owner is required")
+	}
+	return nil
 }
 
 func (r *Runner) String() string {
 	return fmt.Sprintf("runner %s", r.Owner)
+}
+
+func (r *Runner) MaxConcurrency() int {
+	return 1
 }
