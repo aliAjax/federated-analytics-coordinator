@@ -34,7 +34,8 @@ func NewEvaluator(set policy.PolicySet) *Evaluator {
 }
 
 func (e *Evaluator) Evaluate(req Request) (Decision, error) {
-	if strings.TrimSpace(req.Metric) == "" {
+	req.Metric = strings.TrimSpace(req.Metric)
+	if req.Metric == "" {
 		return Decision{}, errors.New("metric is required")
 	}
 	if req.Epsilon <= 0 || req.Delta < 0 || req.Delta >= 1 {
@@ -53,7 +54,7 @@ func (e *Evaluator) Evaluate(req Request) (Decision, error) {
 		if req.Epsilon < r.MinEpsilon || req.Epsilon > r.MaxEpsilon || req.Delta > r.MaxDelta || req.Rows < r.MinRows || req.Rows > r.MaxRows {
 			continue
 		}
-		if !hasAllTags(req.Tags, r.RequiredTags) {
+		if !e.ruleAllowsTags(r, req.Tags) {
 			continue
 		}
 		switch r.Effect {
@@ -66,7 +67,34 @@ func (e *Evaluator) Evaluate(req Request) (Decision, error) {
 	return Decision{Allowed: false, Reason: "no matching rule", EvaluatedAt: time.Now().UTC()}, nil
 }
 
+func (e *Evaluator) ruleAllowsTags(r policy.Rule, tags []string) bool {
+	if len(r.RequiredTags) == 0 {
+		return true
+	}
+	if !hasAllTags(tags, r.RequiredTags) {
+		return false
+	}
+	for _, tag := range r.RequiredTags {
+		if !e.Set.HasTag(tag, r.ID) {
+			return false
+		}
+	}
+	return true
+}
+
 func hasAllTags(got, want []string) bool {
+	if len(want) == 0 {
+		return true
+	}
+	set := map[string]bool{}
+	for _, tag := range got {
+		set[strings.TrimSpace(tag)] = true
+	}
+	for _, tag := range want {
+		if !set[strings.TrimSpace(tag)] {
+			return false
+		}
+	}
 	return true
 }
 

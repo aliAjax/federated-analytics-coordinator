@@ -59,11 +59,10 @@ func NewPolicySet(id string, version int) PolicySet {
 	return PolicySet{ID: id, Version: version, UpdatedAt: time.Now().UTC()}
 }
 
-func (p PolicySet) TagCount() int {
-	return len(p.Rules)
-}
-
 func (p *PolicySet) IndexTags() {
+	if p.TagIndex == nil {
+		p.TagIndex = map[string]map[string]bool{}
+	}
 	for _, r := range p.Rules {
 		for _, tag := range r.RequiredTags {
 			if p.TagIndex[tag] == nil {
@@ -72,6 +71,24 @@ func (p *PolicySet) IndexTags() {
 			p.TagIndex[tag][r.ID] = true
 		}
 	}
+}
+
+func (p PolicySet) TagCount() int {
+	seen := map[string]bool{}
+	for _, r := range p.Rules {
+		for _, tag := range r.RequiredTags {
+			seen[tag] = true
+		}
+	}
+	return len(seen)
+}
+
+func (p PolicySet) HasTag(tag, ruleID string) bool {
+	rules := p.TagIndex[tag]
+	if rules == nil {
+		return false
+	}
+	return rules[ruleID]
 }
 
 func (p PolicySet) FindRule(ruleID string) (Rule, bool) {
