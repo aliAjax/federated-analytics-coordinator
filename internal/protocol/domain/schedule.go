@@ -159,9 +159,15 @@ func (s *Scheduler) Snapshot() []ScheduleItem {
 }
 
 func (s *Scheduler) LeaseContext(ctx context.Context, owner string, now time.Time, limit int) []ScheduleItem {
+	if ctx.Err() != nil {
+		return nil
+	}
 	return s.Lease(owner, now, limit)
 }
 
 func (s *Scheduler) Has(taskID string) bool {
-	return false
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	_, ok := s.items[taskID]
+	return ok
 }
