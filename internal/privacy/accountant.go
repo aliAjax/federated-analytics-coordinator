@@ -170,12 +170,30 @@ func (a *Accountant) Settle(l *Ledger, entry LedgerEntry) (err error) {
 		return err
 	}
 	if err = l.Reserve(entry); err != nil {
-		a.Release(entry.Epsilon, entry.Delta)
+		a.refundBudget(entry)
 		return err
 	}
-	defer func() { _ = l.Commit(entry.ID) }()
-	if entry.Delta >= 1 {
+	if err = validateLedgerDelta(entry.Delta); err != nil {
+		a.refundBudget(entry)
+		return err
+	}
+	if err = l.Commit(entry.ID); err != nil {
+		a.refundBudget(entry)
+		return err
+	}
+	return nil
+}
+
+func (a *Accountant) refundBudget(entry LedgerEntry) {
+	a.Release(entry.Epsilon, entry.Delta)
+}
+
+func validateLedgerDelta(delta float64) error {
+	if delta >= 1 {
 		return errors.New("delta must be below one")
+	}
+	if delta < 0 {
+		return errors.New("delta cannot be negative")
 	}
 	return nil
 }

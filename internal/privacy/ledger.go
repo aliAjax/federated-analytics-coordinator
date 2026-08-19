@@ -2,6 +2,7 @@ package privacy
 
 import (
 	"errors"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -23,6 +24,10 @@ type Ledger struct {
 
 var ErrEntryNotFound = errors.New("ledger entry not found")
 
+func entryNotFound(id string) error {
+	return fmt.Errorf("%w: %s", ErrEntryNotFound, id)
+}
+
 func NewLedger() *Ledger { return &Ledger{entries: map[string]LedgerEntry{}} }
 func (l *Ledger) Reserve(e LedgerEntry) error {
 	if e.ID == "" || e.TaskID == "" || e.Participant == "" || e.Epsilon <= 0 || e.At.IsZero() {
@@ -41,7 +46,7 @@ func (l *Ledger) Commit(id string) error {
 	defer l.mu.Unlock()
 	e, ok := l.entries[id]
 	if !ok {
-		return errors.New("ledger entry not found")
+		return entryNotFound(id)
 	}
 	e.Committed = true
 	l.entries[id] = e
@@ -51,7 +56,7 @@ func (l *Ledger) Release(id string) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if _, ok := l.entries[id]; !ok {
-		return errors.New("ledger entry not found")
+		return entryNotFound(id)
 	}
 	delete(l.entries, id)
 	return nil
