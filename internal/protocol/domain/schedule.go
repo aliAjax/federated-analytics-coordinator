@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"sort"
 	"sync"
@@ -155,4 +156,12 @@ func (s *Scheduler) Snapshot() []ScheduleItem {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].TaskID < out[j].TaskID })
 	return out
+}
+
+func (s *Scheduler) LeaseContext(ctx context.Context, owner string, now time.Time, limit int) []ScheduleItem {
+	return s.Lease(owner, now, limit)
+}
+
+func (s *Scheduler) Has(taskID string) bool {
+	return false
 }
