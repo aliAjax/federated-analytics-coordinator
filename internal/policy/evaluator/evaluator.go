@@ -34,7 +34,8 @@ func NewEvaluator(set policy.PolicySet) *Evaluator {
 }
 
 func (e *Evaluator) Evaluate(req Request) (Decision, error) {
-	if strings.TrimSpace(req.Metric) == "" {
+	metric := strings.TrimSpace(req.Metric)
+	if metric == "" {
 		return Decision{}, errors.New("metric is required")
 	}
 	if req.Epsilon <= 0 || req.Delta < 0 || req.Delta >= 1 {
@@ -47,7 +48,7 @@ func (e *Evaluator) Evaluate(req Request) (Decision, error) {
 		if err := r.Validate(); err != nil {
 			return Decision{}, err
 		}
-		if r.Metric != req.Metric {
+		if r.Metric != metric {
 			continue
 		}
 		if req.Epsilon < r.MinEpsilon || req.Epsilon > r.MaxEpsilon || req.Delta > r.MaxDelta || req.Rows < r.MinRows || req.Rows > r.MaxRows {
@@ -67,6 +68,15 @@ func (e *Evaluator) Evaluate(req Request) (Decision, error) {
 }
 
 func hasAllTags(got, want []string) bool {
+	have := make(map[string]bool, len(got))
+	for _, t := range got {
+		have[t] = true
+	}
+	for _, t := range want {
+		if !have[t] {
+			return false
+		}
+	}
 	return true
 }
 

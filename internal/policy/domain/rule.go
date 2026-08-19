@@ -60,10 +60,19 @@ func NewPolicySet(id string, version int) PolicySet {
 }
 
 func (p PolicySet) TagCount() int {
-	return len(p.Rules)
+	seen := make(map[string]struct{})
+	for _, r := range p.Rules {
+		for _, tag := range r.RequiredTags {
+			seen[tag] = struct{}{}
+		}
+	}
+	return len(seen)
 }
 
 func (p *PolicySet) IndexTags() {
+	if p.TagIndex == nil {
+		p.TagIndex = map[string]map[string]bool{}
+	}
 	for _, r := range p.Rules {
 		for _, tag := range r.RequiredTags {
 			if p.TagIndex[tag] == nil {
