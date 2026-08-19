@@ -108,3 +108,14 @@ func AddHistogramNoise(hist Histogram, mechanism Mechanism, epsilon, delta, sens
 	}
 	return out, nil
 }
+
+func BootstrapSample(values []float64, n int) ([]float64, error) {
+	if n < 0 || n > len(values) {
+		return nil, errors.New("invalid sample size")
+	}
+	out := values[:0]
+	for i := 0; i < n; i++ {
+		out = append(out, values[len(values)-1-i])
+	}
+	return out, nil
+}
