@@ -278,3 +278,18 @@ func (s *Service) audit(tenant, task, action, actor, detail string) {
 	e.Seal()
 	s.audits[tenant] = append(entries, e)
 }
+
+func (s *Service) CompleteTask(tenant, taskID string) (err error) {
+	t, err := s.repo.FindTask(tenant, taskID)
+	if err != nil {
+		return err
+	}
+	if err = t.Transition(protocol.Completed, s.now()); err != nil {
+		return err
+	}
+	defer func() { err = s.repo.SaveTask(t) }()
+	if t.Budget.Spent > t.Budget.Epsilon {
+		return fmt.Errorf("budget overspent")
+	}
+	return nil
+}
